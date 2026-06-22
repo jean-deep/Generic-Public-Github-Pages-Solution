@@ -40,15 +40,30 @@ El modo *Aislado* mantiene el iframe en un origen opaco, así que el código car
 4. *Permissions* → *Repository permissions* → **Contents: Read-only**.
 5. Define una expiración corta y genera el token.
 
-## Limitaciones (Tier 1)
+## Carga en tiempo de ejecución (Tier 1.5)
 
-El modo actual reensambla el sitio de forma estática. **No** funcionan todavía:
+Vitrina descarga **todos** los archivos del repo a un sistema de archivos virtual
+(VFS) en memoria e inyecta un **shim de `fetch` y `XMLHttpRequest`** al principio del
+iframe. Así, cuando la app pide un archivo del repo en runtime —por ejemplo
+`fetch('urls.json?t=...')`— el shim lo resuelve desde el VFS **sin red y sin servidor**,
+incluso en modo *Aislado* (origen opaco). Las peticiones a orígenes externos pasan a la
+red real con normalidad.
 
-- Peticiones de red en runtime (`fetch`, `XHR`, `EventSource`).
-- Service Workers.
-- Módulos ES con imports sin resolver.
+### Compatibilidad
 
-Vitrina **detecta y avisa** de estos casos. La evolución prevista es el **Tier 2** (un Service Worker que intercepta las peticiones del iframe y las proxia a la API de GitHub), que levantaría estas limitaciones. La capa `assets/github.js` está pensada como punto de cambio para esa migración sin tocar la interfaz.
+| Patrón de la app | Estado |
+| --- | --- |
+| Sitios estáticos (HTML/CSS/JS, imágenes, fuentes) | ✅ |
+| `fetch`/`XHR` de archivos del propio repo en runtime | ✅ (vía shim) |
+| `localStorage`/cookies propios | ✅ en modo **Confianza** |
+| Llamadas a APIs externas | ⚠️ pasan a la red; dependen de CORS y de tus credenciales |
+| Módulos ES con `import` relativos | ⚠️ el cargador del navegador no pasa por el shim |
+| Service Workers | ❌ no soportado |
+
+Vitrina **detecta y avisa** de los casos ⚠️/❌. La evolución prevista es el **Tier 2**
+(un Service Worker que intercepta las peticiones del iframe y las proxia a la API de
+GitHub), que cubriría también módulos ES y navegación entre páginas. La capa
+`assets/github.js` es el punto de cambio para esa migración sin tocar la interfaz.
 
 ## Estructura
 
@@ -59,7 +74,7 @@ assets/
   store.js            Persistencia de perfiles y vault en localStorage
   crypto.js           PBKDF2 + AES-GCM (cifrado del PAT)
   github.js           Capa de acceso a la API de GitHub (swap point para Tier 2)
-  loader.js           Tier 1: descarga + reensamblado del repo
+  loader.js           Tier 1.5: descarga + reensamblado + VFS y shim de runtime
   styles.css          Tema visual
 ```
 

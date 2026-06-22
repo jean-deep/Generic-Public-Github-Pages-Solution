@@ -100,10 +100,10 @@ function renderLanding() {
           <strong>solo de sesión</strong> (no se guarda).</p>
       </div>
       <div class="card">
-        <h3><span class="ico" style="color:var(--accent)">◆</span> Tier 1</h3>
-        <p class="muted" style="font-size:14px;margin:8px 0 0">Sitios estáticos
-          (HTML/CSS/JS) funcionan. Peticiones en runtime y Service Workers aún no:
-          Vitrina te avisa si las detecta.</p>
+        <h3><span class="ico" style="color:var(--accent)">◆</span> Tier 1.5</h3>
+        <p class="muted" style="font-size:14px;margin:8px 0 0">Sitios estáticos y
+          apps que leen archivos del repo en runtime (<code>fetch</code>/XHR) funcionan
+          vía un shim. Módulos ES y Service Workers aún no: Vitrina te avisa.</p>
       </div>
     </div>
 
@@ -483,7 +483,7 @@ function mountFrame(p, html, warnings) {
   if (warnings.length) {
     $("#warn-host").innerHTML =
       `<div class="alert warn" style="margin:0;border-radius:0;border-width:0 0 1px">
-        <strong>Aviso (Tier 1):</strong> ${warnings.map(esc).join(" ")}</div>`;
+        <strong>Aviso (Tier 1.5):</strong> ${warnings.map(esc).join(" ")}</div>`;
   }
   const sandbox = p.isolation === "confianza"
     ? "allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
