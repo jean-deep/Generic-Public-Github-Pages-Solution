@@ -1,5 +1,5 @@
 // store.js — Persistencia de perfiles y del "vault" (salt + verifier) en localStorage.
-// El PAT cifrado de los perfiles "aislado" vive aquí; los "confianza" nunca persisten PAT.
+// El PAT cifrado (patEnc) de cada perfil vive aquí.
 
 const PROFILES_KEY = "vitrina.profiles.v1";
 const VAULT_KEY = "vitrina.vault.v1";
@@ -70,7 +70,7 @@ export function newId() {
 }
 
 // ---- Export / Import ----
-// La exportación incluye el PAT cifrado de los perfiles "aislado". Es sensible:
+// La exportación incluye el PAT cifrado de todos los perfiles. Es sensible:
 // quien tenga la passphrase puede descifrarlo. Se avisa en la UI.
 
 export function exportData() {

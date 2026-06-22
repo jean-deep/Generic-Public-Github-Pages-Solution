@@ -40,6 +40,19 @@ export class GitHubClient {
     return this._json(`/rate_limit`);
   }
 
+  // Lista los repos accesibles con el token. Si se pasa `owner`, filtra por ese
+  // propietario. Pagina hasta `maxPages` páginas de `perPage`.
+  async listRepos({ owner = "", perPage = 100, maxPages = 6 } = {}) {
+    const all = [];
+    for (let page = 1; page <= maxPages; page++) {
+      const batch = await this._json(`/user/repos?per_page=${perPage}&page=${page}&sort=pushed`);
+      all.push(...batch);
+      if (batch.length < perPage) break;
+    }
+    const o = owner.trim().toLowerCase();
+    return o ? all.filter((r) => (r.owner?.login || "").toLowerCase() === o) : all;
+  }
+
   // Lista recursiva de archivos de una rama: [{path, type, size, sha}].
   async getTree(owner, repo, branch) {
     const data = await this._json(

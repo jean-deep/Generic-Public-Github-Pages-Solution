@@ -16,20 +16,25 @@ Esto funciona **incluso con repos privados de cuentas gratuitas**, donde las Pag
 
 ## Perfiles
 
-Vitrina guarda múltiples **perfiles** en `localStorage`. Cada perfil apunta a un repo (`owner`, `repo`, `rama`, `archivo de entrada`) y tiene un **modo de aislamiento**:
+Vitrina guarda múltiples **perfiles** en `localStorage`. El **PAT de cada perfil se guarda cifrado** (AES-GCM) con tu passphrase global. Hay dos tipos de perfil:
 
-| Modo | Para qué | Sandbox del iframe | PAT |
-| --- | --- | --- | --- |
-| **Aislado** | Apps de solo visualización | `allow-scripts` (origen opaco) | **Cifrado** con tu passphrase global y persistido |
-| **Confianza** | Apps que necesitan `localStorage`/cookies propios | `allow-scripts allow-same-origin …` | **Solo de sesión** (no se guarda) |
+- **Repo único**: apunta a un repositorio concreto (`owner`, `repo`, `rama`, `archivo de entrada`).
+- **Owner / Explorador**: guarda solo credenciales (y un owner opcional). Al abrirlo lista **todos los repos accesibles** con un buscador inteligente; desde ahí puedes **Ver** un repo al vuelo o **Crear un perfil dedicado** para él.
 
-El modo *Aislado* mantiene el iframe en un origen opaco, así que el código cargado **no puede leer tu PAT**. El modo *Confianza* comparte origen para que la app tenga su propio almacenamiento; a cambio el PAT nunca se persiste y se pide cada sesión.
+Cada perfil de repo tiene un **modo de aislamiento**:
+
+| Modo | Para qué | Sandbox del iframe |
+| --- | --- | --- |
+| **Aislado** | Apps de solo visualización | `allow-scripts` (origen opaco) |
+| **Confianza** | Apps que necesitan `localStorage`/cookies propios | `allow-scripts allow-same-origin …` |
+
+El modo *Aislado* mantiene el iframe en un **origen opaco**, así que el código cargado **no puede leer tu PAT** ni los datos de Vitrina. El modo *Confianza* **comparte origen** para que la app tenga su propio almacenamiento; a cambio, el código cargado podría leer el almacenamiento de Vitrina (incluidos los PAT cifrados) — **úsalo solo con repos de tu confianza**.
 
 ## Seguridad
 
 - Usa siempre un **fine-grained PAT de solo lectura** con permiso `Contents: Read-only`, limitado a los repos necesarios y con **expiración corta**.
 - El PAT viaja **solo a `api.github.com`**, siempre por header, nunca en la URL.
-- Una **passphrase global** (PBKDF2 + AES-GCM, vía Web Crypto) cifra los PAT de los perfiles *Aislado*. La clave vive **solo en memoria** durante la sesión; no se guarda nunca.
+- Una **passphrase global** (PBKDF2 + AES-GCM, vía Web Crypto) cifra el PAT de cada perfil. La clave derivada vive **solo en memoria** durante la sesión; no se guarda nunca.
 - Vitrina es una página estática y pública: trátala como tal. Si un token se ve comprometido, **revócalo en GitHub**.
 
 ## Cómo crear el fine-grained PAT
